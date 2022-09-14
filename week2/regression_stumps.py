@@ -46,7 +46,30 @@ class RegressionStump():
         self.val = None
         self.left = None
         self.right = None
+        best_cost = None
         ### YOUR CODE HERE
+        for i in range(data.shape[1]):
+            feature = data[:,i]
+            for j in range(data.shape[0]):
+                value = feature[j]
+                left_pred = feature <= value
+                right_pred = feature > value
+                if left_pred.sum() == 0 or right_pred.sum() == 0:
+                    continue
+                left_mean = np.mean(targets[left_pred])
+                right_mean = np.mean(targets[right_pred])
+                left_cost = np.mean((targets[left_pred] - left_mean)**2)
+                right_cost = np.mean((targets[right_pred] - right_mean)**2)
+                cost = left_cost + right_cost
+                if best_cost is None or cost < best_cost:
+                    best_cost = cost
+                    self.idx = i
+                    self.val = value
+                    self.left = left_mean
+                    self.right = right_mean
+                
+
+                
         ### END CODE
 
     def predict(self, X):
@@ -57,8 +80,13 @@ class RegressionStump():
         
         returns pred: np.array shape n,  model prediction on X
         """
-        pred = None
+        pred = []
         ### YOUR CODE HERE
+        for i in range(X.shape[0]):
+            if X[i,self.idx] <= self.val:
+                pred.append(self.left)
+            else:
+                pred.append(self.right)
         ### END CODE
         return pred
     
@@ -73,6 +101,7 @@ class RegressionStump():
         """
         out = None
         ### YOUR CODE HERE
+        out = np.mean((self.predict(X) - y)**2)
         ### END CODE
         return out
         
@@ -100,7 +129,7 @@ def main():
     dc_score = ((dc.predict(X_test)-y_test)**2).mean()
     print('dc score', dc_score)
     print('feature names - for comparison', list(enumerate(housing.feature_names)))
-    plot_tree(dc, housing.feature_names)
+    #plot_tree(dc, housing.feature_names)
 
 if __name__ == '__main__':
     main()
